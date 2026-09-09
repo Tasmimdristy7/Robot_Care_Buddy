@@ -128,3 +128,5 @@ document.querySelectorAll('[data-filter]').forEach(button=>button.onclick=()=>{
 $('#search').oninput=render;
 async function refresh(){try{await load();await poll();}catch(error){$('#notice').textContent=error.message;}}
 refresh();setInterval(refresh,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
+
+$('#roaming-buddy').onclick = () => $('#preview').click();

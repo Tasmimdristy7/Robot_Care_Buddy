@@ -30,3 +30,19 @@ button{border:2px solid #302e28;border-radius:9px;color:#302e28;background:#fffd
 footer{color:#8c7c65;border-top:2px solid #302e28}dialog{background:#fffbed;border:2px solid #302e28;border-radius:16px;color:#302e28;box-shadow:7px 7px 0 #302e28}dialog::backdrop{background:#463e2e60}.dialog-top button{color:#302e28;box-shadow:none}label{color:#65583f}.hint{color:#81735a}
 .bubble{background:#fffef8;border:2px solid #302e28;border-radius:28px 25px 27px 8px;box-shadow:4px 4px 0 #302e28}.bubble:after{background:#fffef8;border-right:2px solid #302e28;border-bottom:2px solid #302e28}.bubble .eyebrow{color:#b14e3e}#bubble-text{color:#443b2e}#dismiss{color:#71604a;box-shadow:none}#reminder-actions button{background:#f6df96;border:1.5px solid #302e28;color:#514229;box-shadow:2px 2px 0 #302e28}#complete-reminder{background:#cfe0b5!important;color:#384c2c!important}#notice{color:#6d624d}#form-error,#bubble-error{color:#ad3f31}.celebrate>img{filter:none}.skip:focus{background:#f3cd55;color:#302e28}
 @media(max-width:700px){.buddy-scene{border-radius:35% 35% 12px 12px}.hero-robot{width:145px}.stats>div{border-radius:10px!important}.stats p{font-size:9px}}
+
+/* Buddy explores the viewport edges, then docks for a reminder. */
+.roaming-buddy{position:fixed;left:0;top:0;width:88px;height:110px;padding:0;border:0;background:transparent;box-shadow:none;z-index:4;animation:buddy-roam 36s ease-in-out infinite;will-change:transform}
+.roaming-buddy img{display:block;width:80px;margin:auto;filter:drop-shadow(0 7px 5px #493c2420);animation:float 2.6s ease-in-out infinite;pointer-events:none}
+.roaming-buddy span{position:absolute;white-space:nowrap;bottom:100%;right:0;border:1.5px solid #302e28;border-radius:12px;padding:5px 8px;background:#fffef8;font-size:10px;opacity:0;transition:opacity .2s;pointer-events:none}
+.roaming-buddy:hover,.roaming-buddy:focus-visible{background:transparent;border:0;box-shadow:none;animation-play-state:paused}
+.roaming-buddy:hover span,.roaming-buddy:focus-visible span{opacity:1}
+body:has(#reminder:not([hidden])) .roaming-buddy,body:has(dialog[open]) .roaming-buddy{visibility:hidden;pointer-events:none}
+@keyframes buddy-roam{
+  0%,100%{transform:translate(calc(100vw - 100px),calc(100dvh - 145px)) rotate(-4deg)}
+  25%{transform:translate(calc(100vw - 100px),100px) rotate(4deg)}
+  50%{transform:translate(10px,calc(100dvh - 145px)) rotate(-5deg)}
+  75%{transform:translate(calc(50vw - 44px),calc(100dvh - 120px)) rotate(4deg)}
+}
+@media(prefers-reduced-motion:reduce){.roaming-buddy{left:auto;top:auto;right:16px;bottom:16px}}
+@media(max-width:700px){.roaming-buddy{width:66px;height:85px}.roaming-buddy img{width:62px}}
