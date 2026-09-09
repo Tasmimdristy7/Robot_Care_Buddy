@@ -51,3 +51,13 @@ class BuddyTests(TestCase):
     def test_home_and_not_found(self):
         self.assertContains(self.client.get('/'),'Robot Care Buddy')
         self.assertEqual(self.client.post('/tasks/999/',{'action':'delete'}).status_code,404)
+
+
+class FunFactTests(TestCase):
+    def test_fact_is_from_curated_list_and_does_not_repeat_previous(self):
+        from .facts import FACTS
+        first = self.client.get('/fun-fact/').json()
+        self.assertEqual(first['fact'], FACTS[first['id']])
+        second = self.client.get('/fun-fact/', {'previous':first['id']}).json()
+        self.assertNotEqual(first['id'], second['id'])
+        self.assertEqual(self.client.post('/fun-fact/').status_code, 405)

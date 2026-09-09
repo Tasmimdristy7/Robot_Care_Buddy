@@ -58,3 +58,12 @@ def reminders(request):
     now = timezone.now()
     due = Task.objects.filter(completed=False, due_at__lte=now+timedelta(days=2)).filter(Q(snoozed_until__isnull=True)|Q(snoozed_until__lte=now))
     return JsonResponse({'tasks':[serialize(task) for task in due], 'now':now.isoformat()})
+
+@require_GET
+def fun_fact(request):
+    import random
+    from .facts import FACTS
+    previous = request.GET.get('previous', '')
+    choices = [(i, fact) for i, fact in enumerate(FACTS) if str(i) != previous]
+    index, fact = random.choice(choices)
+    return JsonResponse({'id':index, 'fact':fact})

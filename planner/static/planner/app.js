@@ -100,6 +100,7 @@ async function mutate(id,action) {
 }
 function hideReminder(){reminder.hidden=true;activeReminder=null;}
 function showBubble(message,task=null,celebrate=false){
+  $('#fact-content').hidden=true;
   activeReminder=task;$('#bubble-text').textContent=message;$('#bubble-error').textContent='';
   $('#reminder-actions').hidden=!task;
   reminder.classList.remove('nudging');
@@ -118,7 +119,7 @@ async function poll(){
   try {
     const result=await api('/reminders/');
     if(activeReminder && !result.tasks.some(t=>t.id===activeReminder.id)) hideReminder();
-    if(!reminder.hidden||dialog.open)return;
+    if(activeReminder||dialog.open)return;
     const task=result.tasks.find(t=>(dismissed.get(t.id)||0)<=Date.now());
     if(task){
       const timing=deadline(task);
@@ -195,3 +196,21 @@ makeDraggable(reminder, reminder.querySelector('.reminder-robot'), 'buddy-remind
 reminder.querySelector('.reminder-robot').addEventListener('animationend', event => {
   if (event.animationName === 'buddy-nudge') reminder.classList.remove('nudging');
 });
+
+let previousFact = '', fetchingFact = false;
+async function shareFact() {
+  if (fetchingFact) return;
+  fetchingFact = true;
+  $('#fun-fact').disabled = true; $('#another-fact').disabled = true;
+  try {
+    const result = await api('/fun-fact/?previous=' + encodeURIComponent(previousFact));
+    previousFact = String(result.id);
+    // Keep a real deadline and its actions visible if one is already showing.
+    if (!activeReminder) showBubble('A little brain break? Here’s something fun about code.');
+    $('#fact-content').hidden = false;
+    $('#fact-text').textContent = result.fact;
+  } catch (error) { $('#notice').textContent = error.message; }
+  finally { fetchingFact = false; $('#fun-fact').disabled = false; $('#another-fact').disabled = false; }
+}
+$('#fun-fact').onclick = shareFact;
+$('#another-fact').onclick = shareFact;
