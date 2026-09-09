@@ -75,3 +75,14 @@ body:has(#reminder:not([hidden])) .roaming-buddy,body:has(dialog[open]) .roaming
 @keyframes reminder-glow{50%{box-shadow:0 10px 35px #caaa5140;border-color:#cfb979}}
 @keyframes nudge-heart{0%{opacity:0;transform:translateY(8px) scale(.6)}25%,60%{opacity:1}100%{opacity:0;transform:translateY(-28px) scale(1.15)}}
 @media(prefers-reduced-motion:reduce){.reminder.nudging:after{display:none}}
+
+/* Inline reminder artwork lets Buddy wave his actual hand. */
+.reminder>.reminder-robot{display:block;width:100px;height:auto;margin:15px 22px 0 auto;animation:float 3s infinite;touch-action:none;user-select:none;cursor:grab;overflow:visible}
+.reminder-robot:focus-visible{outline:2px dashed #8b7854;outline-offset:4px}
+.buddy-wave-arm{transform-origin:112px 87px}
+.nudging .buddy-wave-arm{animation:buddy-hand-wave 3s ease-in-out 1}
+.reminder.nudging>.reminder-robot{animation:buddy-nudge 3s ease-in-out 1}
+.celebrate>.reminder-robot{animation:celebrate .65s ease-in-out 2}
+.dragging>.reminder-robot{animation-play-state:paused!important;cursor:grabbing}
+@keyframes buddy-hand-wave{0%,100%{transform:rotate(0)}18%{transform:rotate(-125deg)}30%{transform:rotate(-95deg)}42%{transform:rotate(-135deg)}54%{transform:rotate(-95deg)}66%{transform:rotate(-135deg)}80%{transform:rotate(-110deg)}}
+@media(max-width:700px){.reminder>.reminder-robot{width:80px}}

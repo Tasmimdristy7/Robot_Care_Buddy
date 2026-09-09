@@ -189,9 +189,9 @@ function makeDraggable(element, handle, storageKey) {
   new MutationObserver(clamp).observe(element,{attributes:true,attributeFilter:['hidden']});
 }
 makeDraggable($('#roaming-buddy'), $('#roaming-buddy'), 'buddy-position');
-makeDraggable(reminder, reminder.querySelector('img'), 'buddy-reminder-position');
+makeDraggable(reminder, reminder.querySelector('.reminder-robot'), 'buddy-reminder-position');
 
 // End the greeting after one short sequence; normal floating resumes.
-reminder.querySelector('img').addEventListener('animationend', event => {
+reminder.querySelector('.reminder-robot').addEventListener('animationend', event => {
   if (event.animationName === 'buddy-nudge') reminder.classList.remove('nudging');
 });
