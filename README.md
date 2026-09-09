@@ -1,6 +1,6 @@
 # Robot Care Buddy
 
-A small Python/Django study planner with a floating pixel robot that reminds you about exams and assignments in speech bubbles.
+A small Python/Django study planner with a floating illustrated robot that reminds you about exams and assignments in speech bubbles.
 
 ## Three major functionalities
 
@@ -38,7 +38,7 @@ License: MIT. Its README describes a small Django app for adding and completing 
 | Complete tasks | Complete/reopen tasks and show progress |
 | View daily to-do list | Searchable list with upcoming, overdue, and completed views |
 
-Our deadline checks, snooze behavior, pixel artwork, and floating speech-bubble interface are original additions. Both projects remain small task-management applications; this is not a clone of a large planner platform.
+Our deadline checks, snooze behavior, rounded robot artwork, and floating speech-bubble interface are original additions. Both projects remain small task-management applications; this is not a clone of a large planner platform.
 
 ## AI tool used
 
