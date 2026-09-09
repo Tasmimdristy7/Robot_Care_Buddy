@@ -19,3 +19,21 @@ FACTS = [
     'A syntax error breaks a language’s grammar. A logic error can run perfectly while doing the wrong thing!',
     'An algorithm is a sequence of steps for solving a problem—your breakfast recipe is a friendly analogy.',
 ]
+
+JOKES = [
+    'Why did the recursive function bring a suitcase? It kept calling itself back.',
+    'My code and I are in a committed relationship. Git keeps the receipts.',
+    'I asked my queue for a favor. It said, “Get in line.”',
+    'My stack has excellent manners: the last guest always gets served first.',
+    'I tried telling a UDP joke. I’m not sure you got it.',
+    'My binary search lost its keys. At least it ruled out half the house immediately.',
+    'The boolean went to a party. It could only say true or false, but everyone appreciated its honesty.',
+    'I named my bug “Feature.” Now every release looks more productive.',
+    'My compiler is my most honest friend. It tells me exactly where I went wrong.',
+    'The database refused to gossip. It said our conversation needed a commit first.',
+    'My algorithm went on a diet. It’s trying to reduce its space complexity.',
+    'I told my rubber duck all my problems. It still hasn’t submitted a pull request.',
+    'Why was the graph so popular? It had connections everywhere.',
+    'My cache remembers everything—except when I actually need it to.',
+    'I wrote a joke about an infinite loop. I wrote a joke about an infinite loop…',
+]

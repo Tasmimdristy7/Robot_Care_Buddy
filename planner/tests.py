@@ -61,3 +61,13 @@ class FunFactTests(TestCase):
         second = self.client.get('/fun-fact/', {'previous':first['id']}).json()
         self.assertNotEqual(first['id'], second['id'])
         self.assertEqual(self.client.post('/fun-fact/').status_code, 405)
+
+
+class JokeTests(TestCase):
+    def test_random_joke_and_no_immediate_repeat(self):
+        from .facts import JOKES
+        first = self.client.get('/joke/').json()
+        self.assertEqual(first['joke'], JOKES[first['id']])
+        second = self.client.get('/joke/', {'previous':first['id']}).json()
+        self.assertNotEqual(first['id'], second['id'])
+        self.assertEqual(self.client.post('/joke/').status_code, 405)

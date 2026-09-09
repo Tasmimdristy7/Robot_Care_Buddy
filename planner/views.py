@@ -67,3 +67,11 @@ def fun_fact(request):
     choices = [(i, fact) for i, fact in enumerate(FACTS) if str(i) != previous]
     index, fact = random.choice(choices)
     return JsonResponse({'id':index, 'fact':fact})
+
+@require_GET
+def joke(request):
+    import random
+    from .facts import JOKES
+    choices = [(i, text) for i, text in enumerate(JOKES) if str(i) != request.GET.get('previous', '')]
+    index, text = random.choice(choices)
+    return JsonResponse({'id':index, 'joke':text})

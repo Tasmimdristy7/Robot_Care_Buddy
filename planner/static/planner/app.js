@@ -135,7 +135,7 @@ $('#search').oninput=render;
 async function refresh(){try{await load();await poll();}catch(error){$('#notice').textContent=error.message;}}
 refresh();setInterval(refresh,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
 
-$('#roaming-buddy').onclick = () => $('#preview').click();
+$('#roaming-buddy').onclick = () => shareJoke();
 
 // Drag with mouse or touch; arrow keys provide the same positioning control.
 function makeDraggable(element, handle, storageKey) {
@@ -208,9 +208,36 @@ async function shareFact() {
     // Keep a real deadline and its actions visible if one is already showing.
     if (!activeReminder) showBubble('A little brain break? Here’s something fun about code.');
     $('#fact-content').hidden = false;
+    $('#fact-label').textContent = 'BUDDY’S SOFTWARE FUN FACT';
+    $('#another-fact').textContent = 'Another fact ↻';
+    $('#another-fact').onclick = shareFact;
     $('#fact-text').textContent = result.fact;
   } catch (error) { $('#notice').textContent = error.message; }
   finally { fetchingFact = false; $('#fun-fact').disabled = false; $('#another-fact').disabled = false; }
 }
 $('#fun-fact').onclick = shareFact;
 $('#another-fact').onclick = shareFact;
+
+let previousJoke = '';
+async function shareJoke() {
+  if (fetchingFact) return;
+  fetchingFact = true;
+  $('#tell-joke').disabled = true; $('#another-fact').disabled = true;
+  try {
+    const result = await api('/joke/?previous=' + encodeURIComponent(previousJoke));
+    previousJoke = String(result.id);
+    if (!activeReminder) showBubble('A tiny study break, brought to you by my questionable sense of humor.');
+    $('#fact-content').hidden = false;
+    $('#fact-label').textContent = 'BUDDY’S NERDY JOKE';
+    $('#fact-text').textContent = result.joke;
+    $('#another-fact').textContent = 'Another joke ↻';
+    $('#another-fact').onclick = shareJoke;
+  } catch (error) { $('#notice').textContent = error.message; }
+  finally { fetchingFact = false; $('#tell-joke').disabled = false; $('#another-fact').disabled = false; }
+}
+$('#tell-joke').onclick = shareJoke;
+// The docked robot also tells jokes; the drag handler suppresses clicks after dragging.
+reminder.querySelector('.reminder-robot').addEventListener('click', shareJoke);
+reminder.querySelector('.reminder-robot').addEventListener('keydown', event => {
+  if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); shareJoke(); }
+});
