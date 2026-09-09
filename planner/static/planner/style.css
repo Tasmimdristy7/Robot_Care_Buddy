@@ -93,3 +93,5 @@ body:has(#reminder:not([hidden])) .roaming-buddy,body:has(dialog[open]) .roaming
 @keyframes buddy-left-wave{0%,100%{transform:rotate(0)}18%{transform:rotate(125deg)}30%{transform:rotate(95deg)}42%{transform:rotate(135deg)}54%{transform:rotate(95deg)}66%{transform:rotate(135deg)}80%{transform:rotate(110deg)}}
 
 .buddy-tools{display:flex;gap:10px;flex-wrap:wrap}#fact-content{border-top:1px solid #e7dfce;margin-top:16px;padding-top:10px}#fact-text{font-size:13px;line-height:1.7;color:#514a3f}#another-fact{font-size:11px;box-shadow:none;border:1px solid #ded5c1;background:#f8f2e6}.reminder{max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;padding:4px}
+
+#fact-text{white-space:pre-line}.bubble:has(> .eyebrow[hidden]) #fact-content{border-top:0;margin-top:0;padding-top:0}

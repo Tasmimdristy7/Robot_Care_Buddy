@@ -1,3 +1,5 @@
+let jokeTimers = [];
+function clearJokeTimers() { jokeTimers.forEach(clearTimeout); jokeTimers = []; }
 const $ = selector => document.querySelector(selector);
 let tasks = [], filter = 'upcoming', activeReminder = null, polling = false;
 const dismissed = new Map();
@@ -98,8 +100,12 @@ async function mutate(id,action) {
     $('#notice').textContent=action==='delete'?'Task deleted.':action==='snooze'?'Reminder snoozed for 15 minutes.':'Task updated.';
   }catch(error){$('#notice').textContent=error.message;$('#bubble-error').textContent=error.message;}
 }
-function hideReminder(){reminder.hidden=true;activeReminder=null;}
+function hideReminder(){clearJokeTimers();reminder.hidden=true;activeReminder=null;}
 function showBubble(message,task=null,celebrate=false){
+  clearJokeTimers();
+  $('.bubble > .eyebrow').hidden = false;
+  $('#bubble-text').hidden = false;
+  $('#fact-label').parentElement.hidden = false;
   $('#fact-content').hidden=true;
   activeReminder=task;$('#bubble-text').textContent=message;$('#bubble-error').textContent='';
   $('#reminder-actions').hidden=!task;
@@ -208,6 +214,8 @@ async function shareFact() {
     // Keep a real deadline and its actions visible if one is already showing.
     if (!activeReminder) showBubble('A little brain break? Here’s something fun about code.');
     $('#fact-content').hidden = false;
+    clearJokeTimers();
+    $('#fact-label').parentElement.hidden = false;
     $('#fact-label').textContent = 'BUDDY’S SOFTWARE FUN FACT';
     $('#another-fact').textContent = 'Another fact ↻';
     $('#another-fact').onclick = shareFact;
@@ -226,10 +234,18 @@ async function shareJoke() {
   try {
     const result = await api('/joke/?previous=' + encodeURIComponent(previousJoke));
     previousJoke = String(result.id);
-    if (!activeReminder) showBubble('A tiny study break, brought to you by my questionable sense of humor.');
+    clearJokeTimers();
+    if (!activeReminder) {
+      showBubble('');
+      $('.bubble > .eyebrow').hidden = true;
+      $('#bubble-text').hidden = true;
+    }
     $('#fact-content').hidden = false;
-    $('#fact-label').textContent = 'BUDDY’S NERDY JOKE';
-    $('#fact-text').textContent = result.joke;
+    $('#fact-label').parentElement.hidden = true;
+    const split = result.joke.match(/^(.+?[?.!])\s+([\s\S]+)$/);
+    $('#fact-text').textContent = split ? split[1] : result.joke;
+    if (split) jokeTimers.push(setTimeout(() => { $('#fact-text').textContent = split[1] + '\n\n' + split[2]; }, 1600));
+    jokeTimers.push(setTimeout(() => { $('#fact-text').textContent += '\n\nhahaha 😄'; }, split ? 3200 : 1600));
     $('#another-fact').textContent = 'Another joke ↻';
     $('#another-fact').onclick = shareJoke;
   } catch (error) { $('#notice').textContent = error.message; }
