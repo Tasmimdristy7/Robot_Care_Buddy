@@ -102,7 +102,12 @@ function hideReminder(){reminder.hidden=true;activeReminder=null;}
 function showBubble(message,task=null,celebrate=false){
   activeReminder=task;$('#bubble-text').textContent=message;$('#bubble-error').textContent='';
   $('#reminder-actions').hidden=!task;
+  reminder.classList.remove('nudging');
   reminder.classList.toggle('celebrate',celebrate);reminder.hidden=false;
+  if (task && !paused && !reduced.matches) {
+    void reminder.offsetWidth;
+    reminder.classList.add('nudging');
+  }
 }
 $('#dismiss').onclick=()=>{if(activeReminder) dismissed.set(activeReminder.id,Date.now()+30*60000);hideReminder();};
 $('#snooze').onclick=()=>{if(activeReminder)mutate(activeReminder.id,'snooze');};
@@ -185,3 +190,8 @@ function makeDraggable(element, handle, storageKey) {
 }
 makeDraggable($('#roaming-buddy'), $('#roaming-buddy'), 'buddy-position');
 makeDraggable(reminder, reminder.querySelector('img'), 'buddy-reminder-position');
+
+// End the greeting after one short sequence; normal floating resumes.
+reminder.querySelector('img').addEventListener('animationend', event => {
+  if (event.animationName === 'buddy-nudge') reminder.classList.remove('nudging');
+});

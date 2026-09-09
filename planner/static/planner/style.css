@@ -56,3 +56,22 @@ body:has(#reminder:not([hidden])) .roaming-buddy,body:has(dialog[open]) .roaming
 .stats>div{border:1px solid #e5ddc8!important;box-shadow:none;transform:none!important;border-radius:14px!important}.task{border-color:#e4ded1;box-shadow:0 2px 8px #51482b05;border-radius:13px}.empty{border:1px dashed #d8cfba;border-radius:14px}dialog{border:1px solid #e3daca;box-shadow:0 24px 70px #3b32282b;border-radius:20px}
 .roaming-buddy,.reminder>img{touch-action:none;user-select:none;cursor:grab}.reminder>img:focus-visible{outline:2px dashed #8b7854;outline-offset:4px}
 .manually-placed{animation:none!important;transform:none!important}.dragging,.dragging>img{cursor:grabbing!important}.dragging img{animation-play-state:paused!important}
+
+/* A short, friendly attention gesture for actual deadline reminders. */
+.reminder.nudging>img{transform-origin:50% 85%;animation:buddy-nudge 3s ease-in-out 1}
+.reminder.nudging .bubble{animation:reminder-glow 1.5s ease-in-out 2}
+.reminder.nudging:after{content:'♡';position:absolute;right:4px;bottom:70px;color:#cf765e;font-size:26px;pointer-events:none;animation:nudge-heart 3s ease-out 1 both}
+@keyframes buddy-nudge{
+  0%,100%{transform:translateY(0) rotate(0)}
+  10%{transform:translateY(2px) rotate(-7deg)}
+  22%{transform:translateY(-15px) rotate(7deg)}
+  32%{transform:translateY(0) rotate(-5deg)}
+  42%{transform:translateY(-9px) rotate(5deg)}
+  52%{transform:translateY(0) rotate(0)}
+  65%{transform:translateY(-4px) rotate(-8deg)}
+  76%{transform:translateY(-4px) rotate(8deg)}
+  88%{transform:translateY(0) rotate(-3deg)}
+}
+@keyframes reminder-glow{50%{box-shadow:0 10px 35px #caaa5140;border-color:#cfb979}}
+@keyframes nudge-heart{0%{opacity:0;transform:translateY(8px) scale(.6)}25%,60%{opacity:1}100%{opacity:0;transform:translateY(-28px) scale(1.15)}}
+@media(prefers-reduced-motion:reduce){.reminder.nudging:after{display:none}}
