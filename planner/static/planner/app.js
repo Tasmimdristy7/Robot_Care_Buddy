@@ -130,3 +130,58 @@ async function refresh(){try{await load();await poll();}catch(error){$('#notice'
 refresh();setInterval(refresh,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
 
 $('#roaming-buddy').onclick = () => $('#preview').click();
+
+// Drag with mouse or touch; arrow keys provide the same positioning control.
+function makeDraggable(element, handle, storageKey) {
+  let drag = null, suppressClick = false, positioned = false;
+  function place(x, y, save = false) {
+    positioned = true;
+    element.classList.add('manually-placed');
+    const maxX = Math.max(8, innerWidth - element.offsetWidth - 8);
+    const maxY = Math.max(8, innerHeight - element.offsetHeight - 8);
+    element.style.left = `${Math.max(8, Math.min(x, maxX))}px`;
+    element.style.top = `${Math.max(8, Math.min(y, maxY))}px`;
+    element.style.right = 'auto'; element.style.bottom = 'auto';
+    if (save) { try { localStorage.setItem(storageKey, JSON.stringify([parseFloat(element.style.left), parseFloat(element.style.top)])); } catch {} }
+  }
+  try {
+    const saved = JSON.parse(localStorage.getItem(storageKey));
+    if (Array.isArray(saved) && saved.length === 2 && saved.every(Number.isFinite)) place(...saved);
+  } catch {}
+  handle.addEventListener('pointerdown', event => {
+    if (event.button !== 0) return;
+    const rect = element.getBoundingClientRect();
+    drag = {id:event.pointerId, x:event.clientX, y:event.clientY, left:rect.left, top:rect.top, moved:false};
+    suppressClick = false;
+    handle.setPointerCapture(event.pointerId);
+  });
+  handle.addEventListener('pointermove', event => {
+    if (!drag || drag.id !== event.pointerId) return;
+    const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx,dy) < 5) return;
+    drag.moved = true; element.classList.add('dragging');
+    place(drag.left + dx, drag.top + dy);
+  });
+  function end(event) {
+    if (!drag || drag.id !== event.pointerId) return;
+    suppressClick = drag.moved;
+    if (drag.moved) place(parseFloat(element.style.left), parseFloat(element.style.top), true);
+    drag = null; element.classList.remove('dragging');
+    if (handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId);
+  }
+  handle.addEventListener('pointerup', end); handle.addEventListener('pointercancel', end);
+  handle.addEventListener('click', event => {
+    if (suppressClick) { event.preventDefault(); event.stopImmediatePropagation(); suppressClick = false; }
+  }, true);
+  handle.addEventListener('keydown', event => {
+    const directions = {ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
+    if (!directions[event.key]) return;
+    event.preventDefault(); const rect = element.getBoundingClientRect(); const step = event.shiftKey ? 30 : 10;
+    place(rect.left + directions[event.key][0]*step, rect.top + directions[event.key][1]*step, true);
+  });
+  function clamp() { if (positioned && !element.hidden) place(parseFloat(element.style.left),parseFloat(element.style.top)); }
+  window.addEventListener('resize', clamp);
+  new MutationObserver(clamp).observe(element,{attributes:true,attributeFilter:['hidden']});
+}
+makeDraggable($('#roaming-buddy'), $('#roaming-buddy'), 'buddy-position');
+makeDraggable(reminder, reminder.querySelector('img'), 'buddy-reminder-position');
