@@ -26,6 +26,12 @@ Add an assignment with a deadline an hour from now to see a real reminder. “Me
 
 Dates are entered and displayed in the browser's timezone and sent as explicit UTC timestamps. Overdue tasks appear under Overdue or All. The Upcoming tab excludes completed and overdue tasks.
 
+## Monthly calendar
+
+Use the previous/next month arrows or Today, then select a day to see its exams and assignments in deadline order. The calendar includes completed tasks and is independent of the list filters and search below it. Dates and times use the browser’s timezone, including daylight saving changes.
+
+Run calendar regression checks with `node --test tests/calendar.cjs` (Node.js 18+).
+
 ## Open-source reference
 
 **Simply Todo App** by ptyadana: https://github.com/ptyadana/django-WEB-simple-todo

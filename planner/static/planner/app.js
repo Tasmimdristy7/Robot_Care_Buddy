@@ -37,6 +37,7 @@ function deadline(task) {
   return `Due in ${Math.ceil(minutes / 1440)} days`;
 }
 function render() {
+  renderCalendar();
   const now = Date.now();
   $('#open-count').textContent = tasks.filter(t => !t.completed).length;
   $('#soon-count').textContent = tasks.filter(t => !t.completed && new Date(t.due_at)>=now && new Date(t.due_at)<=now+172800000).length;
@@ -46,10 +47,14 @@ function render() {
     const overdue = new Date(t.due_at)<now;
     return (filter==='all' || (filter==='completed' ? t.completed : !t.completed && (filter==='overdue' ? overdue : !overdue))) && `${t.title} ${t.course}`.toLowerCase().includes(query);
   });
-  const list = $('#task-list'); list.replaceChildren();
+  renderTasks($('#task-list'), visible);
+}
+function renderTasks(list, visible, emptyMessage) {
+  const now = Date.now();
+  list.replaceChildren();
   if (!visible.length) {
     const empty = node('div', undefined, 'empty');
-    empty.append(node('h3', tasks.length ? 'A little breathing room.' : 'Your buddy is ready when you are.'), node('p', tasks.length ? 'No tasks match this view. Try another filter or add something new.' : 'Add your first assignment or exam. I’ll keep an eye on the deadline.'));
+    empty.append(node('h3', tasks.length ? 'A little breathing room.' : 'Your buddy is ready when you are.'), node('p', emptyMessage || (tasks.length ? 'No tasks match this view. Try another filter or add something new.' : 'Add your first assignment or exam. I’ll keep an eye on the deadline.')));
     list.append(empty); return;
   }
   visible.forEach(task => {
@@ -67,6 +72,60 @@ function render() {
     actions.append(edit,remove);card.append(done,body,actions);list.append(card);
   });
 }
+// Construct calendar dates locally; UTC date strings can fall on a different day.
+function dayKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+let selectedDay = new Date();
+let calendarMonth = new Date(selectedDay.getFullYear(), selectedDay.getMonth(), 1);
+function changeMonth(offset) {
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth()+offset, 1);
+  selectedDay = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
+  renderCalendar();
+}
+function renderCalendar() {
+  const year = calendarMonth.getFullYear(), month = calendarMonth.getMonth();
+  const selectedKey = dayKey(selectedDay), today = dayKey(new Date());
+  const grouped = new Map();
+  tasks.forEach(task => {
+    const key = dayKey(new Date(task.due_at));
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key).push(task);
+  });
+  $('#calendar-month').textContent = calendarMonth.toLocaleDateString([], {month:'long',year:'numeric'});
+  $('#calendar-timezone').textContent = `Deadlines in ${Intl.DateTimeFormat().resolvedOptions().timeZone}. All tasks, including completed ones.`;
+  const grid = $('#calendar-days');
+  // Preserve keyboard focus when refreshing or selecting a date.
+  const focusedDay = grid.contains(document.activeElement) ? document.activeElement.dataset.day : null;
+  grid.replaceChildren();
+  for (let i = 0; i < calendarMonth.getDay(); i++) grid.append(node('span'));
+  const days = new Date(year, month+1, 0).getDate();
+  for (let day = 1; day <= days; day++) {
+    const date = new Date(year, month, day), key = dayKey(date);
+    const dayTasks = grouped.get(key) || [];
+    const button = node('button', undefined, 'calendar-day');
+    button.type = 'button'; button.dataset.day = key;
+    button.setAttribute('aria-pressed', String(key === selectedKey));
+    if (key === today) button.setAttribute('aria-current', 'date');
+    button.setAttribute('aria-label', `${date.toLocaleDateString([], {weekday:'long',year:'numeric',month:'long',day:'numeric'})}, ${dayTasks.length} tasks`);
+    button.append(node('span', String(day)));
+    if (dayTasks.length) button.append(node('span', `${dayTasks.length} due`, 'calendar-count'));
+    button.onclick = () => { selectedDay = date; renderCalendar(); };
+    grid.append(button);
+    if (key === focusedDay) button.focus();
+  }
+  $('#calendar-day-title').textContent = selectedDay.toLocaleDateString([], {weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const dayTasks = (grouped.get(selectedKey) || []).slice().sort((a,b) => new Date(a.due_at)-new Date(b.due_at));
+  renderTasks($('#calendar-task-list'), dayTasks, 'No exams or assignments due on this day.');
+}
+$('#calendar-prev').onclick = () => changeMonth(-1);
+$('#calendar-next').onclick = () => changeMonth(1);
+$('#calendar-today').onclick = () => {
+  selectedDay = new Date();
+  calendarMonth = new Date(selectedDay.getFullYear(), selectedDay.getMonth(), 1);
+  renderCalendar();
+};
+
 async function load() { tasks = (await api('/tasks/')).tasks; render(); }
 function openForm(task) {
   form.reset(); $('#form-error').textContent='';
