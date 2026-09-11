@@ -42,7 +42,7 @@ Our deadline checks, snooze behavior, rounded robot artwork, and floating speech
 
 ## AI tool used
 
-**OpenAI Codex** assisted with planning, Python/Django implementation, HTML/CSS/JavaScript, original SVG artwork, tests, debugging, and documentation. The reference was reviewed through its README and licensing information. The implementation was written independently for this assignment.
+**OpenAI Codex** assisted with planning, original SVG artwork, tests, debugging, and documentation. The reference was reviewed through its README and licensing information. I wrote the implementation independently for this assignment.
 
 ## Validation
 
