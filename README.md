@@ -28,9 +28,9 @@ Dates are entered and displayed in the browser's timezone and sent as explicit U
 
 ## Open-source reference
 
-**Simply Todo App** by ptyadana: https://github.com/ptyadana/django-WEB-simple-todo
+**Simply Todo App** by ptyadana: https://github.com/ptyadana/django-B-simple-todo
 
-License: MIT. Its README describes a small Django app for adding and completing daily tasks. We used its documented functionality and small application scope as a reference, not its source code. No reference code, artwork, templates, or dependencies were copied.
+License: MIT. Its README describes a small Django app for adding and completing daily tasks.I have  Used its documented functionality and small application scope as a reference, not its source code. No reference code, artwork, templates, or dependencies were copied.
 
 | Reference functionality | Our independent implementation |
 | --- | --- |
