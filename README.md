@@ -63,3 +63,9 @@ Future tasks are tracked in GitHub Issues and the assignment Project board.
 ## Custom reminder timing
 
 Choose **Remind me** when adding or editing a task: 1 hour, 1 day, or 2 days before its deadline. Existing tasks default to 2 days. Overdue tasks remain eligible; completed and snoozed tasks stay excluded. The summary’s 48-hour count remains a workload overview.
+
+## Recurring study tasks
+
+Choose **Daily** or **Weekly** under Repeat. Completing a task creates one next occurrence from its previous deadline and preserves the completed task. The next task inherits the title, course, type, lead time, and recurrence. Daily/weekly deadlines retain their local clock time in the timezone captured when the task was created, including daylight saving changes (nonexistent spring-forward times shift forward by the gap).
+
+Retrying completion or reopening and completing the same historical task never creates another successor. Edit the next open occurrence to change future repeats, or set Repeat to Never to stop. Completing an overdue task advances one interval at a time; missed sessions are not silently skipped.
