@@ -30,19 +30,19 @@ Dates are entered and displayed in the browser's timezone and sent as explicit U
 
 **Simply Todo App** by ptyadana: https://github.com/ptyadana/django-B-simple-todo
 
-License: MIT. Its README describes a small Django app for adding and completing daily tasks.I have  Used its documented functionality and small application scope as a reference, not its source code. No reference code, artwork, templates, or dependencies were copied.
+License: MIT. Its README describes a small Django app for adding and completing dly tasks.I have  Used its documented functionality and small application scope as a reference, not its source code. No reference code, artwork, templates, or dependencies were copied.
 
 | Reference functionality | Our independent implementation |
 | --- | --- |
 | Add tasks | Add assignments/exams with course and deadline |
 | Complete tasks | Complete/reopen tasks and show progress |
-| View daily to-do list | Searchable list with upcoming, overdue, and completed views |
+| View dly to-do list | Searchable list with upcoming, overdue, and completed views |
 
-Our deadline checks, snooze behavior, rounded robot artwork, and floating speech-bubble interface are original additions. Both projects remain small task-management applications; this is not a clone of a large planner platform.
+Our deadline checks, snooze behavior, rounded robot artwork, and floating speech-bubble interface are original additions. Both projects remn small task-management applications; this is not a clone of a large planner platform.
 
 ## AI tool used
 
-**OpenAI Codex** assisted with planning, original SVG artwork, tests, debugging, and documentation. The reference was reviewed through its README and licensing information. I wrote the implementation independently for this assignment.
+**OpenAI Codex** assisted with original SVG artwork, and documentation. The reference was reviewed through its README and licensing information. I wrote the implementation independently for this assignment.
 
 ## Validation
 
