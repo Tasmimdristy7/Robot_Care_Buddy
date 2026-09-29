@@ -1,4 +1,6 @@
 from datetime import timedelta
+from zoneinfo import ZoneInfo
+from django.db import transaction
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
@@ -12,6 +14,7 @@ from .forms import TaskForm
 def serialize(task):
     return {'id':task.id, 'title':task.title, 'course':task.course, 'kind':task.kind,
             'due_at':task.due_at.isoformat(), 'completed':task.completed, 'reminder_hours':task.reminder_hours,
+            'repeat_days':task.repeat_days, 'repeat_timezone':task.repeat_timezone,
             'snoozed_until':task.snoozed_until.isoformat() if task.snoozed_until else None}
 
 @ensure_csrf_cookie
@@ -42,8 +45,19 @@ def task_action(request, pk):
         task = form.save(commit=False)
         task.snoozed_until = None
     elif action == 'complete':
-        task.completed = True
-        task.snoozed_until = None
+        # Claim completion inside the same transaction as successor creation.
+        # The permanent flag prevents duplicates after retries or reopening history.
+        with transaction.atomic():
+            claimed = Task.objects.filter(pk=pk, completed=False, recurrence_generated=False).update(
+                completed=True, recurrence_generated=bool(task.repeat_days), snoozed_until=None)
+            if claimed and task.repeat_days:
+                next_due = task.due_at.astimezone(ZoneInfo(task.repeat_timezone)) + timedelta(days=task.repeat_days)
+                Task.objects.create(title=task.title, course=task.course, kind=task.kind,
+                    due_at=next_due, reminder_hours=task.reminder_hours,
+                    repeat_days=task.repeat_days, repeat_timezone=task.repeat_timezone)
+            Task.objects.filter(pk=pk).update(completed=True, snoozed_until=None)
+        task.refresh_from_db()
+        return JsonResponse(serialize(task))
     elif action == 'reopen':
         task.completed = False
     elif action == 'snooze':

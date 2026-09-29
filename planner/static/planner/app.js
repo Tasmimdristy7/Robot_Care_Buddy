@@ -61,6 +61,7 @@ function render() {
     const body = node('div'); body.append(node('h3',task.title),node('p',`${task.kind==='exam'?'EXAM':'ASSIGNMENT'}${task.course?' / '+task.course:''}`));
     const date = new Date(task.due_at).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
     body.append(node('p',`${task.completed?'Completed':deadline(task)} · ${date}`,late?'due':''));
+    if (task.repeat_days) body.append(node('p', `${task.repeat_days===1?'Daily':'Weekly'} · ${task.repeat_timezone}`));
     const actions = node('div',undefined,'task-actions');
     const edit = node('button','Edit');edit.onclick=()=>openForm(task);
     const remove=node('button','Delete');remove.onclick=()=>{if(confirm(`Delete “${task.title}”?`)) mutate(task.id,'delete');};
@@ -69,11 +70,11 @@ function render() {
 }
 async function load() { tasks = (await api('/tasks/')).tasks; render(); }
 function openForm(task) {
-  form.reset(); $('#form-error').textContent='';
+  form.reset(); form.elements.repeat_timezone.value=Intl.DateTimeFormat().resolvedOptions().timeZone; $('#form-error').textContent='';
   form.elements.task_id.value=task?.id || '';
   $('#form-title').textContent=task?'Edit your task':'What’s coming up?';
   if(task) {
-    ['title','course','kind','reminder_hours'].forEach(key=>form.elements[key].value=task[key]);
+    ['title','course','kind','reminder_hours','repeat_days','repeat_timezone'].forEach(key=>form.elements[key].value=task[key]);
     const d = new Date(task.due_at);const local = new Date(d.getTime()-d.getTimezoneOffset()*60000);
     form.elements.due_at.value=local.toISOString().slice(0,16);
   }

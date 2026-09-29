@@ -102,3 +102,59 @@ class ReminderLeadTimeTests(TestCase):
         self.assertEqual(self.client.post('/tasks/', data).json()['reminder_hours'], 48)
         task = Task.objects.first()
         self.assertEqual(self.client.post(f'/tasks/{task.id}/', dict(data, action='edit', reminder_hours=24)).json()['reminder_hours'], 24)
+
+
+class RecurringTaskTests(TestCase):
+    def test_daily_and_weekly_completion_preserves_history_and_settings(self):
+        for days in (1, 7):
+            with self.subTest(days=days):
+                Task.objects.all().delete()
+                task = Task.objects.create(title='Study', course='CSCI', kind='exam',
+                    due_at=timezone.datetime(2026, 12, 31, 12, tzinfo=timezone.get_default_timezone()),
+                    repeat_days=days, repeat_timezone='America/Chicago', reminder_hours=1)
+                response = self.client.post(f'/tasks/{task.id}/', {'action':'complete'})
+                self.assertTrue(response.json()['completed'])
+                task.refresh_from_db()
+                successor = Task.objects.get(completed=False)
+                self.assertEqual(successor.due_at, task.due_at + timedelta(days=days))
+                for field in ('title', 'course', 'kind', 'reminder_hours', 'repeat_days', 'repeat_timezone'):
+                    self.assertEqual(getattr(successor, field), getattr(task, field))
+                self.assertIsNone(successor.snoozed_until)
+                for action in ('complete', 'reopen', 'complete', 'complete'):
+                    self.assertEqual(self.client.post(f'/tasks/{task.id}/', {'action':action}).status_code, 200)
+                self.assertEqual(Task.objects.count(), 2)
+
+    def test_timezone_dst_and_validation(self):
+        from zoneinfo import ZoneInfo
+        for start, days, elapsed in [('2026-03-07T09:00:00-06:00', 1, 23), ('2026-10-31T09:00:00-05:00', 1, 25), ('2026-03-01T09:00:00-06:00', 7, 167)]:
+            data = dict(title='Study', kind='assignment', due_at=start, repeat_days=days, repeat_timezone='America/Chicago')
+            task_id = self.client.post('/tasks/', data).json()['id']
+            self.client.post(f'/tasks/{task_id}/', {'action':'complete'})
+            original = Task.objects.get(pk=task_id)
+            successor = Task.objects.order_by('-id').first()
+            self.assertEqual(successor.due_at.astimezone(ZoneInfo('America/Chicago')).hour, 9)
+            self.assertEqual(successor.due_at - original.due_at, timedelta(hours=elapsed))
+        self.assertEqual(self.client.post('/tasks/', dict(data, repeat_days=2)).status_code, 400)
+        self.assertEqual(self.client.post('/tasks/', dict(data, repeat_timezone='Invalid/Zone')).status_code, 400)
+
+    def test_failure_rolls_back_completion(self):
+        from unittest.mock import patch
+        task = Task.objects.create(title='Study', due_at=timezone.now(), repeat_days=1)
+        with patch('planner.views.Task.objects.create', side_effect=RuntimeError('Failed')):
+            with self.assertRaises(RuntimeError):
+                self.client.post(f'/tasks/{task.id}/', {'action':'complete'})
+        task.refresh_from_db()
+        self.assertFalse(task.completed)
+        self.assertFalse(task.recurrence_generated)
+
+    def test_nonrecurring_completion_and_stop_repeating(self):
+        task = Task.objects.create(title='Study', due_at=timezone.now())
+        self.client.post(f'/tasks/{task.id}/', {'action':'complete'})
+        self.assertEqual(Task.objects.count(), 1)
+        self.client.post(f'/tasks/{task.id}/', dict(action='edit', title='Study', kind='assignment', due_at=task.due_at.isoformat(), repeat_days=7))
+        self.client.post(f'/tasks/{task.id}/', {'action':'reopen'})
+        self.client.post(f'/tasks/{task.id}/', {'action':'complete'})
+        successor = Task.objects.get(completed=False)
+        self.client.post(f'/tasks/{successor.id}/', dict(action='edit', title='Study', kind='assignment', due_at=successor.due_at.isoformat(), repeat_days=0))
+        self.client.post(f'/tasks/{successor.id}/', {'action':'complete'})
+        self.assertEqual(Task.objects.count(), 2)
