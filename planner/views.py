@@ -11,7 +11,7 @@ from .forms import TaskForm
 
 def serialize(task):
     return {'id':task.id, 'title':task.title, 'course':task.course, 'kind':task.kind,
-            'due_at':task.due_at.isoformat(), 'completed':task.completed,
+            'due_at':task.due_at.isoformat(), 'completed':task.completed, 'reminder_hours':task.reminder_hours,
             'snoozed_until':task.snoozed_until.isoformat() if task.snoozed_until else None}
 
 @ensure_csrf_cookie
@@ -56,8 +56,8 @@ def task_action(request, pk):
 @require_GET
 def reminders(request):
     now = timezone.now()
-    due = Task.objects.filter(completed=False, due_at__lte=now+timedelta(days=2)).filter(Q(snoozed_until__isnull=True)|Q(snoozed_until__lte=now))
-    return JsonResponse({'tasks':[serialize(task) for task in due], 'now':now.isoformat()})
+    due = Task.objects.filter(completed=False).filter(Q(snoozed_until__isnull=True)|Q(snoozed_until__lte=now))
+    return JsonResponse({'tasks':[serialize(task) for task in due if task.due_at <= now + timedelta(hours=task.reminder_hours)], 'now':now.isoformat()})
 
 @require_GET
 def fun_fact(request):

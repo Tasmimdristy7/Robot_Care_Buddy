@@ -71,3 +71,34 @@ class JokeTests(TestCase):
         second = self.client.get('/joke/', {'previous':first['id']}).json()
         self.assertNotEqual(first['id'], second['id'])
         self.assertEqual(self.client.post('/joke/').status_code, 405)
+
+
+class ReminderLeadTimeTests(TestCase):
+    def test_exact_boundaries_for_all_choices(self):
+        from unittest.mock import patch
+        now = timezone.now()
+        for hours in (1, 24, 48):
+            with self.subTest(hours=hours):
+                Task.objects.all().delete()
+                boundary = Task.objects.create(title='Boundary', due_at=now+timedelta(hours=hours), reminder_hours=hours)
+                Task.objects.create(title='Too early', due_at=now+timedelta(hours=hours, microseconds=1), reminder_hours=hours)
+                overdue = Task.objects.create(title='Overdue', due_at=now-timedelta(days=1), reminder_hours=hours)
+                Task.objects.create(title='Done', due_at=now, completed=True, reminder_hours=hours)
+                Task.objects.create(title='Snoozed', due_at=now, snoozed_until=now+timedelta(minutes=1), reminder_hours=hours)
+                with patch('planner.views.timezone.now', return_value=now):
+                    self.assertEqual({t['id'] for t in self.client.get('/reminders/').json()['tasks']}, {boundary.id, overdue.id})
+
+    def test_persistence_edit_validation_and_legacy_default(self):
+        data = dict(title='Study', kind='assignment', due_at=timezone.now().isoformat())
+        for hours in (1, 24, 48):
+            response = self.client.post('/tasks/', dict(data, reminder_hours=hours))
+            self.assertEqual(response.status_code, 201)
+            task = Task.objects.get(pk=response.json()['id'])
+            self.assertEqual(task.reminder_hours, hours)
+            response = self.client.post(f'/tasks/{task.id}/', dict(data, action='edit'))
+            self.assertEqual(response.json()['reminder_hours'], hours)
+        for value in ('', '2', '-1', 'abc'):
+            self.assertEqual(self.client.post('/tasks/', dict(data, reminder_hours=value)).status_code, 400)
+        self.assertEqual(self.client.post('/tasks/', data).json()['reminder_hours'], 48)
+        task = Task.objects.first()
+        self.assertEqual(self.client.post(f'/tasks/{task.id}/', dict(data, action='edit', reminder_hours=24)).json()['reminder_hours'], 24)
