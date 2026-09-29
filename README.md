@@ -5,7 +5,7 @@ A small Python/Django study planner with a floating illustrated robot that remin
 ## Three major functionalities
 
 1. **Task management:** create, edit, and delete exams and assignments with course names and timezone-aware deadlines, persisted in SQLite.
-2. **Deadline reminders:** the robot floats into the app when a task is due within 48 hours or overdue; snooze for 15 minutes, dismiss for 30 minutes in the current page, or complete from the bubble. Checks run every 30 seconds and when you return to the tab.
+2. **Deadline reminders:** the robot floats into the app when a task is due within its chosen 1-hour, 1-day, or 2-day reminder window, or overdue; snooze for 15 minutes, dismiss for 30 minutes in the current page, or complete from the bubble. Checks run every 30 seconds and when you return to the tab.
 3. **Progress tracking:** complete/reopen tasks, search by task or course, filter upcoming/overdue/completed tasks, and see workload and completion counts.
 
 ## Run locally
@@ -59,3 +59,7 @@ Tests cover CRUD, invalid input, reminder eligibility, snooze expiry, completion
 Reminders work inside the open application, not over other desktop apps or while closed. This version is intended for a single user on localhost; it has no access controls and should not be exposed publicly as a shared planner. GitHub hosts the source; a Django server is needed to run the application. No external AI service, email service, or paid API is required.
 
 Future tasks are tracked in GitHub Issues and the assignment Project board.
+
+## Custom reminder timing
+
+Choose **Remind me** when adding or editing a task: 1 hour, 1 day, or 2 days before its deadline. Existing tasks default to 2 days. Overdue tasks remain eligible; completed and snoozed tasks stay excluded. The summary’s 48-hour count remains a workload overview.

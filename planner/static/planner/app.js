@@ -73,7 +73,7 @@ function openForm(task) {
   form.elements.task_id.value=task?.id || '';
   $('#form-title').textContent=task?'Edit your task':'What’s coming up?';
   if(task) {
-    ['title','course','kind'].forEach(key=>form.elements[key].value=task[key]);
+    ['title','course','kind','reminder_hours'].forEach(key=>form.elements[key].value=task[key]);
     const d = new Date(task.due_at);const local = new Date(d.getTime()-d.getTimezoneOffset()*60000);
     form.elements.due_at.value=local.toISOString().slice(0,16);
   }
@@ -119,7 +119,7 @@ function showBubble(message,task=null,celebrate=false){
 $('#dismiss').onclick=()=>{if(activeReminder) dismissed.set(activeReminder.id,Date.now()+30*60000);hideReminder();};
 $('#snooze').onclick=()=>{if(activeReminder)mutate(activeReminder.id,'snooze');};
 $('#complete-reminder').onclick=()=>{if(activeReminder)mutate(activeReminder.id,'complete');};
-$('#preview').onclick=()=>showBubble('Hi, I’m Buddy! Add a deadline and I’ll float over when it’s less than 48 hours away. One small step at a time.');
+$('#preview').onclick=()=>showBubble('Hi, I’m Buddy! Add a deadline and I’ll float over at your chosen reminder time. One small step at a time.');
 async function poll(){
   if(polling||document.hidden)return;polling=true;
   try {
