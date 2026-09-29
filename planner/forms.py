@@ -24,3 +24,24 @@ class TaskForm(forms.ModelForm):
         model = Task
         fields = ['title', 'course', 'kind', 'due_at', 'reminder_hours', 'repeat_days', 'repeat_timezone']
         widgets = {'due_at': forms.DateTimeInput(attrs={'type':'datetime-local'})}
+
+
+class QuietHoursForm(forms.ModelForm):
+    def clean_timezone(self):
+        value = self.cleaned_data['timezone']
+        try:
+            ZoneInfo(value)
+        except (ZoneInfoNotFoundError, ValueError):
+            raise forms.ValidationError('Choose a valid timezone.')
+        return value
+
+    def clean(self):
+        data = super().clean()
+        if data.get('enabled') and data.get('start') == data.get('end'):
+            raise forms.ValidationError('Start and end must differ. Uncheck Enable to turn quiet hours off.')
+        return data
+
+    class Meta:
+        from .models import QuietHours
+        model = QuietHours
+        fields = ['enabled', 'start', 'end', 'timezone']

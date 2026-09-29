@@ -7,8 +7,8 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils import timezone
 from django.db.models import Q
-from .models import Task
-from .forms import TaskForm
+from .models import Task, QuietHours
+from .forms import TaskForm, QuietHoursForm
 
 
 def serialize(task):
@@ -70,8 +70,11 @@ def task_action(request, pk):
 @require_GET
 def reminders(request):
     now = timezone.now()
+    settings = QuietHours.objects.filter(pk=1).first()
+    if settings and settings.is_active(now):
+        return JsonResponse({'tasks':[], 'now':now.isoformat(), 'quiet':True})
     due = Task.objects.filter(completed=False).filter(Q(snoozed_until__isnull=True)|Q(snoozed_until__lte=now))
-    return JsonResponse({'tasks':[serialize(task) for task in due if task.due_at <= now + timedelta(hours=task.reminder_hours)], 'now':now.isoformat()})
+    return JsonResponse({'tasks':[serialize(task) for task in due if task.due_at <= now + timedelta(hours=task.reminder_hours)], 'now':now.isoformat(), 'quiet':False})
 
 @require_GET
 def fun_fact(request):
@@ -89,3 +92,16 @@ def joke(request):
     choices = [(i, text) for i, text in enumerate(JOKES) if str(i) != request.GET.get('previous', '')]
     index, text = random.choice(choices)
     return JsonResponse({'id':index, 'joke':text})
+
+
+@require_http_methods(['GET', 'POST'])
+def quiet_hours(request):
+    settings = QuietHours.objects.filter(pk=1).first() or QuietHours(pk=1)
+    if request.method == 'POST':
+        form = QuietHoursForm(request.POST, instance=settings)
+        if not form.is_valid():
+            return JsonResponse({'errors':form.errors.get_json_data()}, status=400)
+        settings = form.save()
+    return JsonResponse({'enabled':settings.enabled, 'start':str(settings.start)[:5],
+                         'end':str(settings.end)[:5], 'timezone':settings.timezone,
+                         'saved':not settings._state.adding})
