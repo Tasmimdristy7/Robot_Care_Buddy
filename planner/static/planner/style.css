@@ -95,3 +95,5 @@ body:has(#reminder:not([hidden])) .roaming-buddy,body:has(dialog[open]) .roaming
 .buddy-tools{display:flex;gap:10px;flex-wrap:wrap}#fact-content{border-top:1px solid #e7dfce;margin-top:16px;padding-top:10px}#fact-text{font-size:13px;line-height:1.7;color:#514a3f}#another-fact{font-size:11px;box-shadow:none;border:1px solid #ded5c1;background:#f8f2e6}.reminder{max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;padding:4px}
 
 #fact-text{white-space:pre-line}.bubble:has(> .eyebrow[hidden]) #fact-content{border-top:0;margin-top:0;padding-top:0}
+
+.quiet-settings{margin:24px 0;padding:20px;border:1px solid var(--ink,#302e28);border-radius:12px}.quiet-settings summary{cursor:pointer;font-weight:700}.quiet-settings form{max-width:560px;margin-top:18px}.quiet-settings label{display:block;margin:12px 0}.quiet-settings input{display:block;max-width:100%;padding:10px;border:1px solid #726a57;border-radius:6px;background:#fffdf4;color:#302e28}.quiet-settings .quiet-enabled{display:flex;gap:10px;align-items:center}.quiet-settings input[type=checkbox]{width:auto}.quiet-settings .form-row{display:flex;gap:24px;flex-wrap:wrap}

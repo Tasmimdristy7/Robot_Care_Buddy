@@ -14,3 +14,20 @@ class Task(models.Model):
 
     class Meta:
         ordering = ['completed', 'due_at', 'id']
+
+
+class QuietHours(models.Model):
+    """One persisted preference set for this single-user planner."""
+    enabled = models.BooleanField(default=False)
+    start = models.TimeField(default='22:00')
+    end = models.TimeField(default='08:00')
+    timezone = models.CharField(max_length=64, default='UTC')
+
+    def is_active(self, now):
+        from zoneinfo import ZoneInfo
+        if not self.enabled:
+            return False
+        current = now.astimezone(ZoneInfo(self.timezone)).time()
+        if self.start < self.end:
+            return self.start <= current < self.end
+        return current >= self.start or current < self.end

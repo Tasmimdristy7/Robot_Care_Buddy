@@ -258,3 +258,28 @@ reminder.querySelector('.reminder-robot').addEventListener('click', shareJoke);
 reminder.querySelector('.reminder-robot').addEventListener('keydown', event => {
   if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); shareJoke(); }
 });
+
+
+const quietForm = $('#quiet-form');
+async function loadQuietHours() {
+  const submit = quietForm.querySelector('[type=submit]');
+  submit.disabled = true;
+  try {
+    const settings = await api('/quiet-hours/');
+    quietForm.elements.enabled.checked = settings.enabled;
+    for (const key of ['start', 'end', 'timezone']) quietForm.elements[key].value = settings[key];
+    if (!settings.saved) quietForm.elements.timezone.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch (error) { $('#quiet-message').textContent = error.message; }
+  finally { submit.disabled = false; }
+}
+quietForm.onsubmit = async event => {
+  event.preventDefault();
+  const submit = quietForm.querySelector('[type=submit]'); submit.disabled = true;
+  try {
+    const settings = await api('/quiet-hours/', new FormData(quietForm));
+    $('#quiet-message').textContent = settings.enabled ? `Saved. Buddy pauses from ${settings.start} to ${settings.end} (${settings.timezone}).` : 'Saved. Quiet hours are off.';
+    await poll();
+  } catch (error) { $('#quiet-message').textContent = error.message; }
+  finally { submit.disabled = false; }
+};
+loadQuietHours();

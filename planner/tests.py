@@ -158,3 +158,49 @@ class RecurringTaskTests(TestCase):
         self.client.post(f'/tasks/{successor.id}/', dict(action='edit', title='Study', kind='assignment', due_at=successor.due_at.isoformat(), repeat_days=0))
         self.client.post(f'/tasks/{successor.id}/', {'action':'complete'})
         self.assertEqual(Task.objects.count(), 2)
+
+
+class QuietHoursTests(TestCase):
+    def save_settings(self, **changes):
+        data = dict(enabled='on', start='22:00', end='08:00', timezone='America/Chicago')
+        data.update(changes)
+        return self.client.post('/quiet-hours/', data)
+
+    def test_save_reload_disable_and_invalid_inputs(self):
+        self.assertFalse(self.client.get('/quiet-hours/').json()['enabled'])
+        self.assertEqual(self.save_settings().status_code, 200)
+        saved = self.client.get('/quiet-hours/').json()
+        self.assertEqual((saved['start'], saved['end'], saved['timezone']), ('22:00', '08:00', 'America/Chicago'))
+        self.assertTrue(saved['enabled'])
+        for changes in [dict(start='25:00'), dict(end=''), dict(timezone='Invalid/Zone'), dict(start='08:00')]:
+            self.assertEqual(self.save_settings(**changes).status_code, 400)
+            self.assertEqual(self.client.get('/quiet-hours/').json(), saved)
+        self.assertFalse(self.save_settings(enabled='').json()['enabled'])
+
+    def test_overnight_boundaries_and_resume_with_snooze_and_completion(self):
+        from unittest.mock import patch
+        from datetime import datetime
+        self.save_settings()
+        task = Task.objects.create(title='Overdue', due_at=timezone.now()-timedelta(days=365))
+        Task.objects.create(title='Done', due_at=task.due_at, completed=True)
+        Task.objects.create(title='Snoozed', due_at=task.due_at, snoozed_until=timezone.now()+timedelta(days=365))
+        for instant, active in [('2026-09-29T21:59:59-05:00', False), ('2026-09-29T22:00:00-05:00', True), ('2026-09-30T00:00:00-05:00', True), ('2026-09-30T07:59:59-05:00', True), ('2026-09-30T08:00:00-05:00', False)]:
+            with self.subTest(instant=instant), patch('planner.views.timezone.now', return_value=datetime.fromisoformat(instant)):
+                result = self.client.get('/reminders/').json()
+                self.assertEqual(result['quiet'], active)
+                self.assertEqual([t['id'] for t in result['tasks']], [] if active else [task.id])
+
+    def test_same_day_timezone_and_dst(self):
+        from datetime import datetime
+        from .models import QuietHours
+        self.save_settings(start='09:00', end='17:00')
+        settings = QuietHours.objects.get(pk=1)
+        for instant, active in [('2026-03-07T14:59:59+00:00', False), ('2026-03-07T15:00:00+00:00', True), ('2026-03-08T14:00:00+00:00', True), ('2026-03-08T22:00:00+00:00', False)]:
+            self.assertEqual(settings.is_active(datetime.fromisoformat(instant)), active)
+        settings.enabled = False
+        self.assertFalse(settings.is_active(datetime.fromisoformat('2026-03-08T14:00:00+00:00')))
+
+    def test_csrf_and_methods(self):
+        client = Client(enforce_csrf_checks=True)
+        self.assertEqual(client.post('/quiet-hours/', {}).status_code, 403)
+        self.assertEqual(self.client.delete('/quiet-hours/').status_code, 405)
