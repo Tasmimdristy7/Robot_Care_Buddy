@@ -66,6 +66,7 @@ function renderTasks(list, visible, emptyMessage) {
     const body = node('div'); body.append(node('h3',task.title),node('p',`${task.kind==='exam'?'EXAM':'ASSIGNMENT'}${task.course?' / '+task.course:''}`));
     const date = new Date(task.due_at).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
     body.append(node('p',`${task.completed?'Completed':deadline(task)} · ${date}`,late?'due':''));
+    if (task.repeat_days) body.append(node('p', `${task.repeat_days===1?'Daily':'Weekly'} · ${task.repeat_timezone}`));
     const actions = node('div',undefined,'task-actions');
     const edit = node('button','Edit');edit.onclick=()=>openForm(task);
     const remove=node('button','Delete');remove.onclick=()=>{if(confirm(`Delete “${task.title}”?`)) mutate(task.id,'delete');};
@@ -128,11 +129,11 @@ $('#calendar-today').onclick = () => {
 
 async function load() { tasks = (await api('/tasks/')).tasks; render(); }
 function openForm(task) {
-  form.reset(); $('#form-error').textContent='';
+  form.reset(); form.elements.repeat_timezone.value=Intl.DateTimeFormat().resolvedOptions().timeZone; $('#form-error').textContent='';
   form.elements.task_id.value=task?.id || '';
   $('#form-title').textContent=task?'Edit your task':'What’s coming up?';
   if(task) {
-    ['title','course','kind'].forEach(key=>form.elements[key].value=task[key]);
+    ['title','course','kind','reminder_hours','repeat_days','repeat_timezone'].forEach(key=>form.elements[key].value=task[key]);
     const d = new Date(task.due_at);const local = new Date(d.getTime()-d.getTimezoneOffset()*60000);
     form.elements.due_at.value=local.toISOString().slice(0,16);
   }
@@ -178,7 +179,7 @@ function showBubble(message,task=null,celebrate=false){
 $('#dismiss').onclick=()=>{if(activeReminder) dismissed.set(activeReminder.id,Date.now()+30*60000);hideReminder();};
 $('#snooze').onclick=()=>{if(activeReminder)mutate(activeReminder.id,'snooze');};
 $('#complete-reminder').onclick=()=>{if(activeReminder)mutate(activeReminder.id,'complete');};
-$('#preview').onclick=()=>showBubble('Hi, I’m Buddy! Add a deadline and I’ll float over when it’s less than 48 hours away. One small step at a time.');
+$('#preview').onclick=()=>showBubble('Hi, I’m Buddy! Add a deadline and I’ll float over at your chosen reminder time. One small step at a time.');
 async function poll(){
   if(polling||document.hidden)return;polling=true;
   try {
@@ -316,3 +317,28 @@ reminder.querySelector('.reminder-robot').addEventListener('click', shareJoke);
 reminder.querySelector('.reminder-robot').addEventListener('keydown', event => {
   if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); shareJoke(); }
 });
+
+
+const quietForm = $('#quiet-form');
+async function loadQuietHours() {
+  const submit = quietForm.querySelector('[type=submit]');
+  submit.disabled = true;
+  try {
+    const settings = await api('/quiet-hours/');
+    quietForm.elements.enabled.checked = settings.enabled;
+    for (const key of ['start', 'end', 'timezone']) quietForm.elements[key].value = settings[key];
+    if (!settings.saved) quietForm.elements.timezone.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch (error) { $('#quiet-message').textContent = error.message; }
+  finally { submit.disabled = false; }
+}
+quietForm.onsubmit = async event => {
+  event.preventDefault();
+  const submit = quietForm.querySelector('[type=submit]'); submit.disabled = true;
+  try {
+    const settings = await api('/quiet-hours/', new FormData(quietForm));
+    $('#quiet-message').textContent = settings.enabled ? `Saved. Buddy pauses from ${settings.start} to ${settings.end} (${settings.timezone}).` : 'Saved. Quiet hours are off.';
+    await poll();
+  } catch (error) { $('#quiet-message').textContent = error.message; }
+  finally { submit.disabled = false; }
+};
+loadQuietHours();
