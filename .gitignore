@@ -5,3 +5,9 @@ db.sqlite3
 staticfiles/
 .env
 .DS_Store
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.json
+coverage.xml

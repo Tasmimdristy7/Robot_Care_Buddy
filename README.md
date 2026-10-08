@@ -48,17 +48,21 @@ Our deadline checks, snooze behavior, rounded robot artwork, and floating speech
 
 ## AI tool used
 
-**OpenAI Codex** assisted with planning, Python/Django implementation, HTML/CSS/JavaScript, original SVG artwork, tests, debugging, and documentation. The reference was reviewed through its README and licensing information. The implementation was written independently for this assignment.
+**OpenAI Codex** was used to generate the pytest tests for this assignment. The generated tests were reviewed and verified locally, including line coverage of the selected `reminders()` function.
 
 ## Validation
 
 ```sh
 python manage.py check
-python manage.py test
+python -m pip install -r requirements-dev.txt
+python -m pytest
+python -m pytest --cov=planner --cov-report=term-missing --cov-report=html --cov-report=json
 python manage.py collectstatic --noinput
 ```
 
 Tests cover CRUD, invalid input, reminder eligibility, snooze expiry, completion exclusion, timezone conversion, CSRF enforcement, and missing routes. Browser JavaScript handles animation and polling; Django handles validation, persistence, and reminder selection.
+
+Python tests use pytest with pytest-django and pytest-cov. Open `htmlcov/index.html` to inspect line coverage. The assignment's selected function is `planner.views.reminders`; its coverage should be checked separately from the coverage of the entire module. JavaScript calendar regression checks use Node.js as described above.
 
 ## Scope
 
